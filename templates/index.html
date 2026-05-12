@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Benha News Search Engine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="hero">
+        <nav class="navbar">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Benha News Logo">
+                <div>
+                    <h1>Benha News</h1>
+                    <p>Smart News Search Engine</p>
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="/">Search</a>
+                <a href="/evaluate">Evaluation</a>
+            </div>
+        </nav>
+
+        <section class="hero-content">
+            <div>
+                <h2>Search the latest news articles and images in seconds.</h2>
+                <p class="subtitle">Explore news by keyword, title, subject, and date with fast, organized results.</p>
+            </div>
+        </section>
+    </header>
+
+    <main class="container">
+    <section class="stats-grid">
+        {% for key, value in stats.items() %}
+        <article class="stat-card">
+            <span>{{ key }}</span>
+            <strong>{{ value }}</strong>
+        </article>
+        {% endfor %}
+    </section>
+
+    {% if page == 'search' %}
+    <section class="search-panel">
+        <form action="/" method="GET">
+            <div class="search-row">
+                <input
+                    class="main-search"
+                    type="text"
+                    name="q"
+                    placeholder="Search news... example: artificial intelligence"
+                    value="{{ query }}"
+                    required
+                >
+
+                <button type="submit">Search</button>
+            </div>
+            <div class="filters">
+                <label>
+                    Subject
+                    <select name="subject">
+                        {% for subject in subjects %}
+                            <option value="{{ subject }}" {% if subject == subject_filter %}selected{% endif %}>
+                                {{ subject }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Title contains
+                    <input
+                        type="text"
+                        name="title"
+                        placeholder="Filter by title"
+                        value="{{ title_filter }}"
+                    >
+                </label>
+
+                <label>
+                    From date
+                    <input type="date" name="date_from" value="{{ date_from }}">
+                </label>
+
+                <label>
+                    To date
+                    <input type="date" name="date_to" value="{{ date_to }}">
+                </label>
+            </div>
+        </form>
+    </section>
+
+        {% if search_output %}
+        <section class="results-header">
+            <div>
+                <h3>Search Results</h3>
+                <p>{{ search_output.total_results }} documents found in {{ search_output.search_time }} seconds.</p>
+            </div>
+            <div class="query-box">
+                <span>Processed Query</span>
+                <p>{{ search_output.query_terms | join(', ') }}</p>
+            </div>
+        </section>
+
+        {% if search_output.message %}
+        <div class="empty-state">{{ search_output.message }}</div>
+        {% endif %}
+
+        <section class="results-grid">
+            {% for result in search_output.results %}
+            <article class="result-card">
+                <div class="image-wrap">
+                    {% if result.image_url %}
+                        <img src="{{ result.image_url }}" alt="{{ result.title }}" onerror="this.src='{{ url_for('static', filename='logo.png') }}'">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='logo.png') }}" alt="Benha News">
+                    {% endif %}
+                    <span class="rank">#{{ result.rank }}</span>
+                </div>
+                <div class="result-content">
+                    <div class="meta">
+                        <span>{{ result.subject }}</span>
+                        <span>{{ result.published }}</span>
+                        <span>TF-IDF: {{ result.score }}</span>
+                    </div>
+                    <h4>{{ result.title }}</h4>
+                    <p class="article-text">{{ result.summary }}</p>
+                    {% if result.url %}
+                    <a class="read-more" href="{{ result.url }}" target="_blank">Open article</a>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </section>
+
+        {% if search_output.results|length == 0 and not search_output.message %}
+            <div class="empty-state">No results found. Try another query or remove some filters.</div>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+
+        {% if page == 'evaluate' %}
+        <section class="evaluation-panel">
+            <div class="evaluation-title">
+                <h3>Search Engine Evaluation</h3>
+                <p>Testing retrieval speed and output quality using multiple sample queries.</p>
+                <strong>Average response time: {{ average_time }} seconds</strong>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Query</th>
+                            <th>Retrieved Documents</th>
+                            <th>Top Result</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in evaluations %}
+                        <tr>
+                            <td>{{ item.query }}</td>
+                            <td>{{ item.results_count }}</td>
+                            <td>{{ item.top_result }}</td>
+                            <td>{{ item.time }} sec</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+    </main>
+    <footer>
+        <p>جميع الحقوق محفوظة 
+            موقع بنها نيوز الرسمي</p>
+    </footer>
+</body>
+</html>
